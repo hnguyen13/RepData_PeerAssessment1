@@ -1,0 +1,148 @@
+---
+title: "Personal Activity Report"
+author: "Hien Nguyen"
+date: "Sunday, July 12, 2015"
+output: html_document
+---
+Data
+*The data for this assignment can be downloaded from https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip*
+
+*Dataset: Activity monitoring data [52K]*
+*The variables included in this dataset are:*
+
+*steps: Number of steps taking in a 5-minute interval (missing values are coded       as NA)*
+
+*date: The date on which the measurement was taken in YYYY-MM-DD format*
+
+*interval: Identifier for the 5-minute interval in which measurement was taken*
+
+*The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset.*
+
+Load the data into an activityOrig dataset
+```{r, echo=TRUE}
+activityOrig <- read.csv("activity.csv")
+```
+Format the date
+```{r, echo=TRUE}
+activityOrig$date <- as.Date(activityOrig$date, "%Y-%m-%d")
+```
+<font color="blue"><b>QUESTION 1:   What is mean total number of steps taken per day?</b></font>
+<br>Create a new dataset from activityOrig without NAs
+```{r, echo=TRUE}
+activity <- na.omit(activityOrig)
+```
+Calculate the total steps per day and put in the column "total"
+```{r, echo=TRUE}
+require("plyr")
+sumByDate <- ddply(activity, .(date), summarise, total=sum(steps))
+```
+Create a histogram of the total steps and run a summary to get mean/median
+```{r, echo=TRUE}
+mygraph <- hist(as.numeric(sumByDate$total), col="red",main= "Histogram of Total Steps", xlab="Number of Steps", ylab="Frequency")
+summary(sumByDate)
+```
+<font color="blue">ANSWER 1</font>
+**Median :10765**
+**Mean   :10766**
+<p><font color="blue"><b>QUESTION 2: What is the average daily activity pattern?</b></font>
+<br>To answer this question, let's create a subset with just 2 columns: steps and intervals
+```{r, echo=TRUE}
+stepInterval <- subset(activity, select = c(steps, interval))
+```
+From this subset, we are calculating the average of steps for each interval
+```{r, echo=TRUE}
+averageForEachInterval <- ddply(stepInterval, .(interval), summarise, avg=mean(steps))
+```
+plot the average steps per interval
+```{r, echo=TRUE}
+mygraph2 <- with(averageForEachInterval, plot(interval, avg, main= "Average steps per interval", ylab="Average", xlab="Intervals", type="l"))
+```
+<P>let's find out what's the max average
+```{r, echo=TRUE}
+summary(averageForEachInterval$avg)
+```
+The max is 206.170.  This was a round up number
+<br>To find which interval corresponds to this max value
+```{r, echo=TRUE}
+averageForEachInterval[as.numeric(averageForEachInterval$avg) > 206,]
+```
+<font color="blue">ANSWER: Interval 835 has the highest average of steps of 206.170</font>
+
+<p><font color="blue"><b>QUESTION 3: Imputing missing values</b></font>
+<br>1.  Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+```{r, echo=TRUE}
+activityNA <- subset(activityOrig, is.na(steps))
+nrow(activityNA)
+```
+<font color="blue">Answer:  2304 rows with NA values.</font>
+
+<br>2.  Filling in all of the missing values in the dataset with the mean for that 5-minute interval
+<br>a.  Add the average column
+```{r, echo=TRUE}
+activityImput <- merge(activityNA, averageForEachInterval,by="interval")
+```
+<br>b.  Remove the NA column
+```{r, echo=TRUE}
+activityImput <- subset(activityImput, select = -c(2) )
+```
+<br>c.  Rename the average column to "steps"
+```{r, echo=TRUE}
+colnames(activityImput)[3] <- "steps"
+```
+<br>d.  Reorder the columns
+```{r, echo=TRUE}
+activityImput <- subset(activityImput, select = c(3,2,1))
+```
+<br>3.  Create a new dataset that is equal to the original dataset but with the missing data filled in by combining activityImput and activity.
+```{r, echo=TRUE}
+activityNew <- rbind(activity, activityImput)
+```
+<br> 4. Make a histogram of the total number of steps taken each day
+<br>Calculate the total steps per day and put in the column "total"
+```{r, echo=TRUE}
+sumByDate2 <- ddply(activityNew, .(date), summarise, total=sum(steps))
+```
+Create a histogram of the total steps and run a summary to get mean/median
+```{r, echo=TRUE}
+mygraph2 <- hist(as.numeric(sumByDate2$total), col="green",main= "Histogram of Total Steps", xlab="Number of Steps", ylab="Frequency")
+summary(sumByDate2)
+```
+<font color="blue">ANSWER 3</font>
+**Median :10766**
+**Mean   :10766**
+<br> Do these values differ from the estimates from the first part of the assignment? 
+<br> The mean stays the same.  The median is up by 1.
+<br> What is the impact of imputing missing data on the estimates of the total daily number of steps?
+<br> very slightly
+<font color="blue"><b>QUESTION 4:  Are there differences in activity patterns between weekdays and weekends?</b></font>
+<br> first, add a column to store the day of the week
+```{r, echo=TRUE}
+activityNew$weekday <- weekdays(as.Date(activityNew$date))
+```
+<br> then, put the Saturday and Sunday records in one table, mark them "weekend"
+```{r, echo=TRUE}
+activityWeekend <- activityNew[activityNew$weekday %in% c("Saturday", "Sunday"),]
+activityWeekend$weekday <- "weekend"
+```
+<br> then, put the rest of the records in one table, mark them "weekday"
+```{r, echo=TRUE}
+activityWeekday <- activityNew[activityNew$weekday %in% c("Monday", "Tuesday","Wednesday", "Thursday","Friday"),]
+activityWeekday$weekday <- "weekday"
+```
+<br> calculate the average for activityWeekend and activityWeekday
+```{r, echo=TRUE}
+avgPerIntervalWeekend <- ddply(activityWeekend, c("interval", "weekday"), summarise, avg=mean(steps))
+avgPerIntervalWeekday <- ddply(activityWeekday, c("interval", "weekday"), summarise, avg=mean(steps))
+avgPerIntervalAll <- rbind(avgPerIntervalWeekend, avgPerIntervalWeekday)
+mygraph3 <- with(avgPerIntervalWeekend, plot(interval, avg, main= "Average steps per interval (weekend)", ylab="Average", xlab="Intervals", type="l"))
+mygraph4 <- with(avgPerIntervalWeekday, plot(interval, avg, main= "Average steps per interval (weekday)", ylab="Average", xlab="Intervals", type="l"))
+#mygraph5 <- with(avgPerIntervalAll, plot(interval, avg, main= "Average steps per interval (weekday)", ylab="Average", #xlab="Intervals", type="l", col=weekday))
+head(avgPerIntervalAll)
+```
+graph
+```{r, echo=TRUE}
+require(ggplot2)
+
+#mygraph5 <-- xyplot(interval~avg|weekday, data=avgPerIntervalAll, type = "l")
+ggplot(avgPerIntervalAll, aes(interval, avg, colour = weekday)) + geom_line() + facet_grid(.~weekday) + facet_wrap(~weekday, nrow=2) +  xlab("Interval") + ylab("Average Number of Steps")
+```
