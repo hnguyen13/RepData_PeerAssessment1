@@ -1,25 +1,18 @@
 ---
-<<<<<<< HEAD
-title: "Personal Activity Report"
+title: "Personal Activity Analysis Report"
 author: "Hien Nguyen"
 date: "Sunday, July 12, 2015"
 output: html_document
 ---
-Data
-*The data for this assignment can be downloaded from https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip*
-
-*Dataset: Activity monitoring data [52K]*
-*The variables included in this dataset are:*
-
-*steps: Number of steps taking in a 5-minute interval (missing values are coded       as NA)*
-
-*date: The date on which the measurement was taken in YYYY-MM-DD format*
-
-*interval: Identifier for the 5-minute interval in which measurement was taken*
-
-*The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset.*
-
-Load the data into an activityOrig dataset
+<font color=green> <b>Data</b> 
+The data for this assignment can be downloaded from https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip
+<br>The variables included in this dataset are:
+<br>steps: Number of steps taking in a 5-minute interval (missing values are coded as NA)
+<br>date: The date on which the measurement was taken in YYYY-MM-DD format
+<br>interval: Identifier for the 5-minute interval in which measurement was taken
+<br>The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset.
+</font>
+<br>Load the data into an activityOrig dataset
 ```{r, echo=TRUE}
 activityOrig <- read.csv("activity.csv")
 ```
@@ -39,7 +32,7 @@ sumByDate <- ddply(activity, .(date), summarise, total=sum(steps))
 ```
 Create a histogram of the total steps and run a summary to get mean/median
 ```{r, echo=TRUE}
-mygraph <- hist(as.numeric(sumByDate$total), col="red",main= "Histogram of Total Steps", xlab="Number of Steps", ylab="Frequency")
+mygraph <- hist(as.numeric(sumByDate$total), col="light green",main= "Histogram of Total Steps", xlab="Number of Steps", ylab="Frequency")
 summary(sumByDate)
 ```
 <font color="blue">ANSWER 1</font>
@@ -67,15 +60,15 @@ The max is 206.170.  This was a round up number
 ```{r, echo=TRUE}
 averageForEachInterval[as.numeric(averageForEachInterval$avg) > 206,]
 ```
-<font color="blue">ANSWER: Interval 835 has the highest average of steps of 206.170</font>
+<font color="blue">ANSWER 2: Interval 835 has the highest average of steps of 206.170
 
-<p><font color="blue"><b>QUESTION 3: Imputing missing values</b></font>
-<br>1.  Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+<p><b>QUESTION 3: Imputing missing values</b></font>
+<br>1.  Calculate and report the total number of missing values in the dataset (total number of rows with NAs)
 ```{r, echo=TRUE}
 activityNA <- subset(activityOrig, is.na(steps))
 nrow(activityNA)
 ```
-<font color="blue">Answer:  2304 rows with NA values.</font>
+<font color="blue">Answer 3:  2304 rows with NA values.</font>
 
 <br>2.  Filling in all of the missing values in the dataset with the mean for that 5-minute interval
 <br>a.  Add the average column
@@ -105,7 +98,7 @@ sumByDate2 <- ddply(activityNew, .(date), summarise, total=sum(steps))
 ```
 Create a histogram of the total steps and run a summary to get mean/median
 ```{r, echo=TRUE}
-mygraph2 <- hist(as.numeric(sumByDate2$total), col="green",main= "Histogram of Total Steps", xlab="Number of Steps", ylab="Frequency")
+mygraph2 <- hist(as.numeric(sumByDate2$total), col="light blue",main= "Histogram of Total Steps", xlab="Number of Steps", ylab="Frequency")
 summary(sumByDate2)
 ```
 <font color="blue">ANSWER 3</font>
@@ -135,41 +128,11 @@ activityWeekday$weekday <- "weekday"
 avgPerIntervalWeekend <- ddply(activityWeekend, c("interval", "weekday"), summarise, avg=mean(steps))
 avgPerIntervalWeekday <- ddply(activityWeekday, c("interval", "weekday"), summarise, avg=mean(steps))
 avgPerIntervalAll <- rbind(avgPerIntervalWeekend, avgPerIntervalWeekday)
-mygraph3 <- with(avgPerIntervalWeekend, plot(interval, avg, main= "Average steps per interval (weekend)", ylab="Average", xlab="Intervals", type="l"))
-mygraph4 <- with(avgPerIntervalWeekday, plot(interval, avg, main= "Average steps per interval (weekday)", ylab="Average", xlab="Intervals", type="l"))
-#mygraph5 <- with(avgPerIntervalAll, plot(interval, avg, main= "Average steps per interval (weekday)", ylab="Average", #xlab="Intervals", type="l", col=weekday))
-head(avgPerIntervalAll)
 ```
 graph
 ```{r, echo=TRUE}
 require(ggplot2)
 
-#mygraph5 <-- xyplot(interval~avg|weekday, data=avgPerIntervalAll, type = "l")
 ggplot(avgPerIntervalAll, aes(interval, avg, colour = weekday)) + geom_line() + facet_grid(.~weekday) + facet_wrap(~weekday, nrow=2) +  xlab("Interval") + ylab("Average Number of Steps")
 ```
-=======
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
 
-
-## Loading and preprocessing the data
-
-
-
-## What is mean total number of steps taken per day?
-
-
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
->>>>>>> 80edf39c3bb508fee88e3394542f967dd3fd3270
